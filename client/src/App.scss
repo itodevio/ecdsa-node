@@ -76,11 +76,38 @@ input {
     display: inline-flex;
     margin-top: 10px;
     padding: 0.75rem;
-    background-color: #f4f6f8;
+    background-color: #ddd;
+    border-radius: 10px;
+  }
+
+  .address {
+    font-weight: 400;
+    font-size: .9em;
+    display: inline-flex;
+    margin-top: 10px;
+    padding: 0.75rem;
+    background-color: #ddd;
+    border-radius: 10px;
   }
 }
 
 .transfer {
   display: flex;
   flex-direction: column;
+}
+
+.info-message {
+  color: #66c;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 0.25rem;
+  font-weight: bold;
+  font-size: 0.7rem;
+  display: inline-block;
+}
+
+.error-message {
+  color: #c44;
+  padding-top: 0.5rem;
+  font-weight: bold;
 }
