@@ -10,24 +10,30 @@ app.use(cors());
 app.use(express.json());
 
 const balances = {
-  //a510857b92ba9eb648c8b5ff701805154391f7f3d652643d8158f6d94f50e06c
   "7ebd1e6de04b088bb1db221cca4fb2893afc5585": 100,
-  // 9c519658fdccf51e587c986de8df591766c7e53a0c467c9296e873c1261d5f1e
   "0080842abdf2c5604919c76ff45c6b06ed65c935": 50,
-  // 5f50983822331320a72bf766d50ed92846ecdf3308611973f9ad31852b0d459c
   "b375c4d185954a7603ffa0848fe194e4e69ed785": 75,
 };
+
+const nonces = {
+  "7ebd1e6de04b088bb1db221cca4fb2893afc5585": 0,
+  "0080842abdf2c5604919c76ff45c6b06ed65c935": 0,
+  "b375c4d185954a7603ffa0848fe194e4e69ed785": 0,
+}
 
 app.get("/balance/:address", (req, res) => {
   const { address } = req.params;
   const balance = balances[address.replace('0x', '')] || 0;
-  res.send({ balance });
+  const nonce = nonces[address.replace('0x', '')] || 0;
+  res.send({ balance, nonce });
 });
 
 app.post("/send", (req, res) => {
-  const { recipient, amount, compactSignature } = req.body;
+  const { recipient, amount, compactSignature, nonce } = req.body;
 
-  const message = `Send ${amount} to ${recipient}`;
+  console.log(nonces)
+
+  const message = `Send ${amount} to ${recipient}. Nonce: ${nonce}`;
 
   const signature = unpackSignature(compactSignature);
   const publicKey = recoverPublicKey(signature, message);
@@ -35,20 +41,26 @@ app.post("/send", (req, res) => {
   const isSignatureValid = secp256k1.verify(signature, hash(message), publicKey);
 
   if (!isSignatureValid) {
-    res.status(400).send({ message: 'Invalid signature!' });
+    return res.status(400).send({ message: 'Invalid signature!' });
   }
 
   const sender = getAddress(publicKey);
 
+  if (nonces[sender] !== nonce) {
+    return res.status(400).send({ message: 'Invalid nonce' });
+  }
+
   setInitialBalance(sender);
   setInitialBalance(recipient);
+  setInitialNonce(sender);
 
   if (balances[sender] < amount) {
-    res.status(400).send({ message: "Not enough funds!" });
+    return res.status(400).send({ message: "Not enough funds!" });
   } else {
     balances[sender] -= amount;
     balances[recipient] += amount;
-    res.send({ balance: balances[sender] });
+    nonces[sender] += 1;
+    return res.send({ balance: balances[sender], nonce: nonces[sender] });
   }
 });
 
@@ -59,6 +71,12 @@ app.listen(port, () => {
 function setInitialBalance(address) {
   if (!balances[address]) {
     balances[address] = 0;
+  }
+}
+
+function setInitialNonce(address) {
+  if (!nonces[address]) {
+    nonces[address] = 0;
   }
 }
 

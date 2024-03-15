@@ -4,7 +4,7 @@ import { secp256k1 } from 'ethereum-cryptography/secp256k1';
 import { keccak256 } from 'ethereum-cryptography/keccak';
 import { toHex } from 'ethereum-cryptography/utils';
 
-function Wallet({ privateKey, setPrivateKey, balance, setBalance }) {
+function Wallet({ privateKey, setPrivateKey, balance, setBalance, setNonce }) {
   const [error, setError] = useState('');
   const [address, setAddress] = useState('');
 
@@ -26,6 +26,7 @@ function Wallet({ privateKey, setPrivateKey, balance, setBalance }) {
         const { data } = await server.get(`balance/${_address}`);
         setAddress(`0x${_address}`);
         setBalance(data.balance);
+        setNonce(data.nonce);
       } catch (err) {
         setError('Invalid private key');
       }

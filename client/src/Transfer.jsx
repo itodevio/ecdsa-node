@@ -4,7 +4,7 @@ import { keccak256 } from 'ethereum-cryptography/keccak';
 import { secp256k1 } from 'ethereum-cryptography/secp256k1';
 import { utf8ToBytes } from 'ethereum-cryptography/utils';
 
-function Transfer({ setBalance, privateKey }) {
+function Transfer({ setBalance, privateKey, nonce, setNonce }) {
   const [sendAmount, setSendAmount] = useState("");
   const [recipient, setRecipient] = useState("");
 
@@ -14,7 +14,7 @@ function Transfer({ setBalance, privateKey }) {
     evt.preventDefault();
 
     try {
-      const message = `Send ${sendAmount} to ${recipient}`;
+      const message = `Send ${sendAmount} to ${recipient}. Nonce: ${nonce}`;
       const messageBytes = utf8ToBytes(message);
       const signature = secp256k1.sign(keccak256(messageBytes), privateKey.replace('0x', ''));
       console.log(signature)
@@ -23,8 +23,10 @@ function Transfer({ setBalance, privateKey }) {
         amount: parseInt(sendAmount),
         recipient: recipient.replace('0x', ''),
         compactSignature: signature.toCompactHex() + signature.recovery.toString(16),
+        nonce,
       });
       setBalance(data.balance);
+      setNonce(data.nonce);
     } catch (ex) {
       console.log(ex)
       alert(ex.response.data.message);
